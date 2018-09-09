@@ -31,6 +31,29 @@ class FarmManager {
     }
   }
 
+  sortByAnimalsCount() {
+    const farms = [...this.farms];
+
+    const quickSort = arr => {
+      if (arr.length <= 1) return arr;
+
+      let left = [];
+      let right = [];
+
+      const [first, ...rest] = arr;
+
+      left = rest.filter(i => i.animalsCount < first.animalsCount);
+      right = rest.filter(i => i.animalsCount > first.animalsCount);
+
+      return quickSort(left).concat(first, quickSort(right));
+    };
+
+    console.time("QuickSort");
+    const sorted = quickSort(farms);
+    console.timeEnd("QuickSort");
+    console.log(sorted);
+  }
+
   sortByPower() {
     const farms = [...this.farms];
     let comparisons = 0;
@@ -57,6 +80,7 @@ class FarmManager {
     console.timeEnd("Selection sort");
     console.log(`Comprasions: ${comparisons}`);
     console.log(`Swaps: ${swaps}`);
+    console.log(farms.reverse());
   }
 }
 
@@ -64,6 +88,7 @@ const init = async () => {
   const manager = new FarmManager();
   await manager.readAndInitData();
   manager.sortByPower();
+  manager.sortByAnimalsCount();
 };
 
 init();
