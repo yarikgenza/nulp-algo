@@ -82,7 +82,7 @@ class FarmManager {
     console.log(sorted);
   }
 
-  bubbleSortByPower() {
+  selectionByPower() {
     const farms = [...this.farms];
     let comparisons = 0;
     let swaps = 0;
@@ -115,7 +115,7 @@ class FarmManager {
 const init = async () => {
   const manager = new FarmManager();
   await manager.readAndInitData();
-  manager.bubbleSortByPower();
+  manager.selectionByPower();
   manager.quickSortByAnimalsCount();
 };
 
