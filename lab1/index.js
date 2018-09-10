@@ -2,6 +2,13 @@ const fs = require("fs");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
 
+Array.prototype.chunk = function(n) {
+  if (!this.length) {
+    return [];
+  }
+  return [this.slice(0, n)].concat(this.slice(n).chunk(n));
+};
+
 class Farm {
   constructor(location, animalsCount, power) {
     this.location = location;
@@ -19,20 +26,32 @@ class FarmManager {
     try {
       const data = await readFile("data.txt", "utf8");
       const farms = data.split(",");
-      this.farms = [
-        new Farm(farms[0], +farms[1], +farms[2]),
-        new Farm(farms[3], +farms[4], +farms[5]),
-        new Farm(farms[6], +farms[7], +farms[8]),
-        new Farm(farms[9], +farms[10], +farms[11]),
-        new Farm(farms[12], +farms[13], +farms[14])
-      ];
+
+      if (farms.length % 3 !== 0) {
+        console.log("Invalid data");
+        return;
+      }
+
+      const farmsArr = farms.chunk(3);
+
+      farmsArr.forEach(item => {
+        this.farms.push(
+          new Farm(
+            item[0], // Location
+            +item[1], // animalsCount
+            +item[2] // power
+          )
+        );
+      });
     } catch (error) {
       console.log("Error while reading data: ", error);
     }
   }
 
-  sortByAnimalsCount() {
+  quickSortByAnimalsCount() {
     const farms = [...this.farms];
+    let comparisons = 0;
+    let swaps = 0;
 
     const quickSort = arr => {
       if (arr.length <= 1) return arr;
@@ -42,19 +61,28 @@ class FarmManager {
 
       const [first, ...rest] = arr;
 
-      left = rest.filter(i => i.animalsCount < first.animalsCount);
-      right = rest.filter(i => i.animalsCount > first.animalsCount);
+      left = rest.filter(i => {
+        comparisons++;
+        return i.animalsCount < first.animalsCount;
+      });
+      right = rest.filter(i => {
+        comparisons++;
+        return i.animalsCount > first.animalsCount;
+      });
 
+      swaps++;
       return quickSort(left).concat(first, quickSort(right));
     };
 
     console.time("QuickSort");
     const sorted = quickSort(farms);
     console.timeEnd("QuickSort");
+    console.log(`Comprasions: ${comparisons}`);
+    console.log(`Swaps: ${swaps}`);
     console.log(sorted);
   }
 
-  sortByPower() {
+  bubbleSortByPower() {
     const farms = [...this.farms];
     let comparisons = 0;
     let swaps = 0;
@@ -87,8 +115,8 @@ class FarmManager {
 const init = async () => {
   const manager = new FarmManager();
   await manager.readAndInitData();
-  manager.sortByPower();
-  manager.sortByAnimalsCount();
+  manager.bubbleSortByPower();
+  manager.quickSortByAnimalsCount();
 };
 
 init();
