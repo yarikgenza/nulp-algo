@@ -2,6 +2,10 @@ const fs = require("fs");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
 
+const locationIndex = 0;
+const animalsCountIndex = 1;
+const powerIndex = 2;
+
 Array.prototype.chunk = function(n) {
   if (!this.length) {
     return [];
@@ -37,9 +41,9 @@ class FarmManager {
       farmsArr.forEach(item => {
         this.farms.push(
           new Farm(
-            item[0], // Location
-            +item[1], // animalsCount
-            +item[2] // power
+            item[locationIndex], // Location
+            +item[animalsCount], // animalsCount
+            +item[powerIndex] // power
           )
         );
       });
