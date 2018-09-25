@@ -34,12 +34,16 @@ class Main {
       console.log("Error while reading data: ", error);
     }
   }
+
+  getHamsterMaxCount() {
+    return 5;
+  }
 }
 
 const init = async () => {
   const main = new Main();
   await main.readAndInitData();
+  console.log(main.getHamsterMaxCount());
 }
-
 
 init();
