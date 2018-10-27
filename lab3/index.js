@@ -85,12 +85,90 @@ class Graph {
     );
   }
 
+  getMaxVal(arr, key) {
+    let init = arr[0];
+    arr.forEach(i => {
+      if (key === "endNode") {
+        if (i[key] > init[key]) {
+          init = i;
+        }
+      } else {
+        if (i[key] < init[key]) {
+          init = i;
+        }
+      }
+    });
+    return init;
+  }
+
+  findDistances() {
+    const { clients, nodes, edges } = this;
+
+    let leftClients = [];
+    let rightClients = [];
+
+    clients.forEach(client => {
+      if (edges.find(edge => edge.startNode === client.index)) {
+        leftClients.push(client);
+      } else if (
+        edges.find(
+          edge => edge.endNode === client.index && !leftClients[client]
+        )
+      ) {
+        rightClients.push(client);
+      }
+    });
+
+    const leftDistances = leftClients.map(client => {
+      let weight = 0;
+      let foundServer = false;
+      let targetNode = client;
+      while (!foundServer) {
+        if (targetNode.type === "server") {
+          foundServer = true;
+          break;
+        }
+
+        const paths = edges.filter(e => e.startNode === targetNode.index);
+        const bestPath = this.getMaxVal(paths, "endNode");
+
+        weight = weight + bestPath.weight;
+        targetNode = nodes.find(node => node.index === bestPath.endNode);
+      }
+      //console.log("For client: ", client, weight);
+      return { client, weight };
+    });
+
+    const rightDistances = rightClients.map(client => {
+      let weight = 0;
+      let foundServer = false;
+      let targetNode = client;
+      while (!foundServer) {
+        if (targetNode.type === "server") {
+          foundServer = true;
+          break;
+        }
+
+        const paths = edges.filter(e => e.endNode === targetNode.index);
+        const bestPath = this.getMaxVal(paths, "endNode");
+
+        weight = weight + bestPath.weight;
+        targetNode = nodes.find(node => node.index === bestPath.startNode);
+      }
+      //console.log("For client: ", client, weight);
+      return { client, weight };
+    });
+    console.log(leftDistances);
+    console.log(rightDistances);
+  }
+
   findOptimal() {
     // Take one route as a server.
     // Find distance;
     const { routers, clients } = this;
 
-    this.fillNodes(clients, routers, 2);
+    this.fillNodes(clients, routers, 1);
+    this.findDistances();
 
     console.log(this.nodes);
   }
@@ -100,7 +178,21 @@ const init = async () => {
   const graph = new Graph();
   await graph.readAndInitData();
   graph.findOptimal();
-  // await main.writeResultData(canGetMaxHasters);
 };
 
 init();
+
+// edges.forEach(edge => {
+//   if (targetNode.type === "server") {
+//     foundServer = true;
+//     return;
+//   }
+//   if (edge.startNode === targetNode.index) {
+
+//     weight = weight + edge.weight;
+//     targetNode = nodes.find(node => node.index === edge.endNode);
+//   } else if (edge.endNode === targetNode.index) {
+//     weight = weight + edge.weight;
+//     targetNode = nodes.find(node => node.index === edge.startNode);
+//   }
+// });
