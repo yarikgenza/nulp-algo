@@ -51,7 +51,6 @@ class Graph {
     const routers = new Set();
 
     clients.forEach(client => {
-      // Find in .->. and .<-. directions
       edges.forEach(edge => {
         if (edge.startNode === client.index) {
           routers.add(edge.endNode);
@@ -62,7 +61,6 @@ class Graph {
     });
 
     this.routers = Array.from(routers);
-    console.log(this.routers);
   }
 
   fillNodes(clients, routers, serverIndex) {
@@ -88,14 +86,8 @@ class Graph {
   getMaxVal(arr, key) {
     let init = arr[0];
     arr.forEach(i => {
-      if (key === "endNode") {
-        if (i[key] > init[key]) {
-          init = i;
-        }
-      } else {
-        if (i[key] < init[key]) {
-          init = i;
-        }
+      if (i[key] > init[key]) {
+        init = i;
       }
     });
     return init;
@@ -119,58 +111,65 @@ class Graph {
       }
     });
 
-    const leftDistances = leftClients.map(client => {
+    const evaluate = (client, direction) => {
       let weight = 0;
       let foundServer = false;
       let targetNode = client;
+
       while (!foundServer) {
         if (targetNode.type === "server") {
           foundServer = true;
           break;
         }
 
-        const paths = edges.filter(e => e.startNode === targetNode.index);
-        const bestPath = this.getMaxVal(paths, "endNode");
+        if (direction === "left") {
+          const paths = edges.filter(e => e.startNode === targetNode.index);
+          const bestPath = this.getMaxVal(paths, "endNode");
 
-        weight = weight + bestPath.weight;
-        targetNode = nodes.find(node => node.index === bestPath.endNode);
-      }
-      //console.log("For client: ", client, weight);
-      return { client, weight };
-    });
+          if (!bestPath) {
+            break;
+          }
 
-    const rightDistances = rightClients.map(client => {
-      let weight = 0;
-      let foundServer = false;
-      let targetNode = client;
-      while (!foundServer) {
-        if (targetNode.type === "server") {
-          foundServer = true;
-          break;
+          weight = weight + bestPath.weight;
+          targetNode = nodes.find(node => node.index === bestPath.endNode);
+        } else {
+          const paths = edges.filter(e => e.endNode === targetNode.index);
+          const bestPath = this.getMaxVal(paths, "endNode");
+
+          if (!bestPath) {
+            break;
+          }
+
+          weight = weight + bestPath.weight;
+          targetNode = nodes.find(node => node.index === bestPath.startNode);
         }
-
-        const paths = edges.filter(e => e.endNode === targetNode.index);
-        const bestPath = this.getMaxVal(paths, "endNode");
-
-        weight = weight + bestPath.weight;
-        targetNode = nodes.find(node => node.index === bestPath.startNode);
       }
-      //console.log("For client: ", client, weight);
-      return { client, weight };
-    });
-    console.log(leftDistances);
-    console.log(rightDistances);
+      return weight;
+    };
+
+    const leftDistances = leftClients.map(client => evaluate(client, "left"));
+    const rightDistances = rightClients.map(client =>
+      evaluate(client, "right")
+    );
+    return [...leftDistances, ...rightDistances];
   }
 
   findOptimal() {
-    // Take one route as a server.
-    // Find distance;
     const { routers, clients } = this;
 
-    this.fillNodes(clients, routers, 1);
-    this.findDistances();
+    let minLatency;
 
-    console.log(this.nodes);
+    routers.forEach((router, index) => {
+      this.fillNodes(clients, routers, index);
+      const max = Math.max(...this.findDistances());
+      if (!minLatency) {
+        minLatency = max;
+      } else if (max < minLatency) {
+        minLatency = max;
+      }
+    });
+
+    console.log(minLatency);
   }
 }
 
@@ -181,18 +180,3 @@ const init = async () => {
 };
 
 init();
-
-// edges.forEach(edge => {
-//   if (targetNode.type === "server") {
-//     foundServer = true;
-//     return;
-//   }
-//   if (edge.startNode === targetNode.index) {
-
-//     weight = weight + edge.weight;
-//     targetNode = nodes.find(node => node.index === edge.endNode);
-//   } else if (edge.endNode === targetNode.index) {
-//     weight = weight + edge.weight;
-//     targetNode = nodes.find(node => node.index === edge.startNode);
-//   }
-// });
