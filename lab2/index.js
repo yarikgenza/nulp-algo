@@ -24,7 +24,10 @@ class Main {
       this.foodCount = +lines[0];
       this.hamsterCount = +lines[1];
       const hamsters = lines.splice(2, lines.length);
-      this.hamsters = hamsters.map(hamster => new Hamster(+hamster[0], +hamster[2]));
+      this.hamsters = hamsters.map(hamster => {
+        const data = hamster.split(' ');
+        return new Hamster(+data[0], +data[1]);
+      })
     } catch (error) {
       console.log("Error while reading data: ", error);
     }
@@ -54,20 +57,26 @@ class Main {
   };
 
   getHamsterMaxCount() {
-    const hamsters = [0, ...this.quickSortByAvariceLevel(this.hamsters)]; // 0 here is an initial accumulator value;
+    const hamsters = [0, ...this.hamsters.sort((a, b) => a.avariceLevel - b.avariceLevel)]; // 0 here is an initial accumulator value;
 
     let loopIndex = 0;
+
+    let hamstersArr = []
 
     const sum = hamsters.reduce((accumulator, hamster) => {
       const currentHamsterEat = hamster.dayRate + (hamster.avariceLevel * loopIndex);
 
       if ((accumulator + currentHamsterEat) <= this.foodCount) {
+        hamstersArr.push(hamster);
         loopIndex = loopIndex + 1;
         return accumulator + currentHamsterEat;
       } else {
         return accumulator;
       }
     });
+
+    console.log(hamstersArr)
+    console.log(sum);
 
     return loopIndex;
   }
